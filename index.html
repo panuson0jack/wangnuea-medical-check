@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wang Nuea Hospital | ระบบตรวจเช็กเครื่องมือแพทย์</title>
+<style>
+:root{--blue:#0b5cab;--blue2:#eaf4ff;--green:#15803d;--red:#b91c1c;--yellow:#a16207;--text:#1f2937;--muted:#64748b;--line:#dbe4ec;--bg:#f5f8fb}
+*{box-sizing:border-box}body{margin:0;font-family:"Noto Sans Thai","Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#083c78,var(--blue));color:#fff;padding:22px 18px}
+.wrap{max-width:1200px;margin:auto;padding:0 16px}.brand{font-size:1.55rem;font-weight:800}.sub{margin-top:5px;opacity:.92}
+nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.navrow{display:flex;gap:8px;overflow:auto;padding:10px 0}.tab{border:1px solid var(--line);background:#fff;padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+main{padding:20px 0 40px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.full{grid-column:1/-1}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 4px 16px rgba(15,23,42,.04)}
+h2{margin:0 0 14px;font-size:1.15rem;color:#0b477f}h3{margin:16px 0 10px;font-size:1rem}
+.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}label{display:block;font-size:.9rem;font-weight:700;margin-bottom:6px}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:#fff}textarea{min-height:84px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{padding:14px;border-radius:12px;background:var(--blue2);border:1px solid #cfe6fb}.stat b{display:block;font-size:1.4rem;margin-top:3px}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{border-bottom:1px solid #e5e7eb;padding:10px 8px;vertical-align:middle}th{background:#f8fafc;text-align:left}.c{text-align:center}.radio{display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid var(--line);border-radius:7px}.radio input{width:auto}
+.result{padding:14px;text-align:center;border-radius:11px;font-weight:800}.ready{background:#dcfce7;color:var(--green)}.bad{background:#fee2e2;color:var(--red)}.wait{background:#fef3c7;color:var(--yellow)}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{background:#e5e7eb}.danger{background:#fee2e2;color:#991b1b}.small{font-size:.83rem;color:var(--muted)}
+.badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:.8rem;font-weight:800}.bready{background:#dcfce7;color:var(--green)}.bbad{background:#fee2e2;color:var(--red)}
+.matrix td,.matrix th{text-align:center;padding:5px}.matrix th:first-child,.matrix td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}.matrix input{width:28px;height:28px;padding:0}
+.hidden{display:none}.section-title{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.device-pill{background:var(--blue2);color:#0b477f;border-radius:999px;padding:7px 11px;font-weight:800}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.formgrid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media print{nav,.no-print{display:none!important}body{background:#fff}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand" id="siteHospital">WANGNUEA HOSPITAL</div><div class="sub" id="siteTitle">ระบบตรวจเช็กความพร้อมใช้งานอุปกรณ์ทางการแพทย์ออนไลน์</div></div></header>
+
+<nav><div class="wrap navrow">
+  <button class="tab active" onclick="showPage('dashboard',this)">Dashboard</button>
+  <button class="tab" onclick="showPage('check',this)">ตรวจเช็กอุปกรณ์</button>
+  <button class="tab" onclick="showPage('monthly',this)">ตารางตรวจรายเดือน</button>
+  <button class="tab" onclick="showPage('history',this)">ประวัติการตรวจ</button>
+  <button class="tab" onclick="showPage('settings',this)">⚙️ ตั้งค่าแบบตรวจ</button>
+</div></nav>
+
+<main class="wrap">
+<section id="dashboard">
+  <div class="grid">
+    <div class="card full"><div class="section-title"><h2>ภาพรวมระบบ</h2><span class="small">ข้อมูลตัวอย่างจากแบบฟอร์มที่ส่งมา</span></div>
+      <div class="stats">
+        <div class="stat">อุปกรณ์ทั้งหมด<b id="sTotal">3</b></div>
+        <div class="stat">พร้อมใช้งาน<b id="sReady">0</b></div>
+        <div class="stat">ไม่พร้อมใช้<b id="sBad">0</b></div>
+        <div class="stat">ตรวจวันนี้<b id="sToday">0</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>ประเภทอุปกรณ์</h2>
+      <div class="actions">
+        <button class="primary" onclick="goCheck('Defibrillator')">Defibrillator</button>
+        <button class="primary" onclick="goCheck('EKG')">EKG</button>
+        <button class="primary" onclick="goCheck('Infusion Pump')">Infusion Pump</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>หลักการทำงาน</h2>
+      <div class="small">เลือกอุปกรณ์ → กรอกรหัสครุภัณฑ์/ผู้ตรวจ → ตรวจแต่ละรายการ → ระบบสรุปสถานะ → บันทึกประวัติ → ดู/ส่งออกข้อมูล</div>
+    </div>
+  </div>
+</section>
+
+<section id="check" class="hidden">
+  <div class="grid">
+    <div class="card">
+      <div class="section-title"><h2>ข้อมูลการตรวจ</h2><span class="device-pill" id="devicePill">EKG</span></div>
+      <div class="formgrid">
+        <div><label>ประเภทอุปกรณ์<select id="device" onchange="loadChecklist()"></select></label></div>
+        <div><label>รหัสครุภัณฑ์<input id="asset" placeholder="เช่น EKG-001"></label></div>
+        <div><label>ยี่ห้อ / รุ่น<input id="model" placeholder="เช่น ZONCARE iMAC 120"></label></div>
+        <div><label>Serial Number<input id="serial"></label></div>
+        <div><label>หน่วยงาน / ห้อง<input id="dept" placeholder="เช่น ER"></label></div>
+        <div><label>ผู้ตรวจ<input id="inspector"></label></div>
+        <div><label>วันที่<input id="date" type="date"></label></div>
+        <div><label>เวลา<input id="time" type="time"></label></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>ผลการตรวจ</h2>
+      <div id="result" class="result wait">กรุณาตรวจให้ครบทุกข้อ</div>
+      <div class="small" style="margin-top:9px">กติกาต้นแบบ: ถ้ามีข้อ “ผิดปกติ” ระบบจะแสดง “ไม่พร้อมใช้งาน”</div>
+      <div class="actions no-print"><button class="primary" onclick="saveRecord()">บันทึกผล</button><button class="secondary" onclick="window.print()">พิมพ์ / PDF</button><button class="danger" onclick="resetForm()">ล้างฟอร์ม</button></div>
+    </div>
+    <div class="card full">
+      <div class="section-title"><h2>รายการตรวจเช็ก</h2><span class="small" id="count"></span></div>
+      <div class="tablewrap"><table><thead><tr><th>No.</th><th>รายการ / วิธีปฏิบัติ / ตรวจสอบ</th><th class="c">ปกติ</th><th class="c">ผิดปกติ</th><th class="c">N/A</th></tr></thead><tbody id="checklist"></tbody></table></div>
+    </div>
+    <div class="card full">
+      <h2>รายละเอียดเพิ่มเติม</h2>
+      <div class="formgrid">
+        <div><label>อาการ / ปัญหาที่พบ<textarea id="problem" placeholder="ระบุรายละเอียดกรณีผิดปกติ"></textarea></label></div>
+        <div><label>การดำเนินการ<textarea id="action" placeholder="เช่น หยุดใช้งาน / แจ้งงานเครื่องมือแพทย์"></textarea></label></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="monthly" class="hidden">
+  <div class="card">
+    <div class="section-title"><h2>ตารางตรวจเช็กประจำเดือน</h2><span class="small">รูปแบบออนไลน์แทนตารางกระดาษ 1–31 วัน</span></div>
+    <div class="formgrid">
+      <div><label>ประเภทอุปกรณ์<select id="mDevice" onchange="buildMatrix()"></select></label></div>
+      <div><label>เดือน / ปี<input id="mMonth" type="month"></label></div>
+      <div><label>หน่วยงาน<input id="mDept"></label></div><div><label>ผู้รับผิดชอบ<input id="mOwner"></label></div>
+    </div>
+    <div class="tablewrap" style="margin-top:16px"><table class="matrix" id="matrix"></table></div>
+    <div class="actions no-print"><button class="primary" onclick="saveMatrix()">บันทึกตารางประจำเดือน</button><button class="secondary" onclick="window.print()">พิมพ์ / PDF</button></div>
+  </div>
+</section>
+
+<section id="history" class="hidden">
+  <div class="card"><div class="section-title"><h2>ประวัติการตรวจ</h2><span class="small">ข้อมูลเก็บในเบราว์เซอร์ของเครื่องนี้ในเวอร์ชันต้นแบบ</span></div>
+    <div class="tablewrap"><table><thead><tr><th>วันที่/เวลา</th><th>อุปกรณ์</th><th>รหัสครุภัณฑ์</th><th>หน่วยงาน</th><th>ผู้ตรวจ</th><th>สถานะ</th></tr></thead><tbody id="history"></tbody></table></div>
+    <div class="actions no-print"><button class="secondary" onclick="exportCSV()">Export CSV / Excel</button><button class="danger" onclick="clearHistory()">ลบประวัติ</button></div>
+  </div>
+</section>
+
+<section id="admin" class="hidden" style="display:none!important">
+  <div class="grid">
+    <div class="card">
+      <div class="section-title"><h2>จัดการประเภทอุปกรณ์</h2><span class="small">เพิ่ม/เปลี่ยนชื่อ/ลบประเภท</span></div>
+      <div class="formgrid">
+        <div><label>ชื่อประเภทอุปกรณ์<input id="newDeviceName" placeholder="เช่น Pulse Oximeter"></label></div>
+        <div style="display:flex;align-items:end"><button class="primary" onclick="addDevice()">+ เพิ่มประเภท</button></div>
+      </div>
+      <div id="deviceAdminList" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><h2>เพิ่มหัวข้อ Checklist</h2><span class="small">ไม่ต้องแก้โค้ด</span></div>
+      <label>เลือกประเภทอุปกรณ์<select id="adminDevice" onchange="renderAdminChecklist()"></select></label>
+      <div class="formgrid" style="margin-top:12px">
+        <div><label>หัวข้อใหม่<textarea id="newChecklist" placeholder="เช่น ตรวจสอบสายไฟและปลั๊กไฟ"></textarea></label></div>
+        <div><label>วิธีปฏิบัติ / เกณฑ์ตรวจ<textarea id="newMethod" placeholder="เช่น ตรวจดูรอยฉีกขาดและทดสอบการทำงาน"></textarea></label></div>
+      </div>
+      <div class="actions"><button class="primary" onclick="addChecklistItem()">+ เพิ่มหัวข้อ</button></div>
+    </div>
+    <div class="card full">
+      <div class="section-title"><h2>รายการ Checklist ปัจจุบัน</h2><span class="small">แก้ไข / ลบ / เลื่อนลำดับ</span></div>
+      <div id="adminChecklistList"></div>
+    </div>
+    <div class="card full">
+      <h2>สำรองและกู้คืนแบบตรวจ</h2>
+      <div class="small">ส่งออก/นำเข้าโครงสร้าง Checklist เป็นไฟล์ JSON เพื่อย้ายไปเครื่องอื่นได้</div>
+      <div class="actions">
+        <button class="secondary" onclick="exportConfig()">ส่งออกการตั้งค่า</button>
+        <label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:9px;cursor:pointer">
+          นำเข้าการตั้งค่า <input type="file" accept=".json" onchange="importConfigFile(this)" style="display:none">
+        </label>
+        <button class="danger" onclick="resetConfig()">คืนค่าเริ่มต้น</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="settings" class="hidden">
+  <div class="grid">
+    <div class="card full">
+      <div class="section-title">
+        <h2>ตั้งค่าข้อมูลหน้าเว็บ</h2>
+        <span class="small">แก้ข้อความที่แสดงบนระบบได้เอง</span>
+      </div>
+      <div class="formgrid">
+        <div><label>ชื่อโรงพยาบาล<input id="cfgHospital" placeholder="เช่น WANGNUEA HOSPITAL"></label></div>
+        <div><label>ชื่อระบบ / แบบฟอร์ม<input id="cfgSystemTitle" placeholder="ระบบตรวจเช็กความพร้อมใช้งานอุปกรณ์ทางการแพทย์ออนไลน์"></label></div>
+        <div><label>คำอธิบายใต้ชื่อระบบ<input id="cfgSystemSubtitle"></label></div>
+        <div><label>ข้อความหมายเหตุท้ายระบบ<input id="cfgFooter"></label></div>
+      </div>
+      <div class="actions"><button class="primary" onclick="saveSiteSettings()">บันทึกข้อมูลหน้าเว็บ</button></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h2>ข้อมูลที่ต้องกรอกตอนตรวจ</h2><span class="small">เปิด/ปิดช่องได้</span></div>
+      <div id="fieldSettings"></div>
+      <div class="actions"><button class="primary" onclick="saveFieldSettings()">บันทึกข้อมูลช่องกรอก</button></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><h2>ตัวเลือกผลการตรวจ</h2><span class="small">แก้ข้อความได้</span></div>
+      <div class="formgrid">
+        <div><label>ผลปกติ<input id="cfgNormal" value="ปกติ"></label></div>
+        <div><label>ผลผิดปกติ<input id="cfgAbnormal" value="ผิดปกติ"></label></div>
+        <div><label>ไม่เกี่ยวข้อง<input id="cfgNA" value="N/A"></label></div>
+        <div><label>สถานะพร้อมใช้งาน<input id="cfgReady" value="พร้อมใช้งาน"></label></div>
+        <div><label>สถานะไม่พร้อมใช้งาน<input id="cfgNotReady" value="ไม่พร้อมใช้งาน"></label></div>
+      </div>
+      <div class="actions"><button class="primary" onclick="saveResultSettings()">บันทึกตัวเลือกผล</button></div>
+    </div>
+
+    <div class="card full">
+      <div class="section-title"><h2>จัดการอุปกรณ์และ Checklist</h2><span class="small">แก้ไขได้จากหน้าเว็บ</span></div>
+      <label>เลือกประเภทอุปกรณ์<select id="settingsDevice" onchange="renderSettingsChecklist()"></select></label>
+      <div class="actions">
+        <button class="primary" onclick="promptAddDevice()">+ เพิ่มประเภทอุปกรณ์</button>
+        <button class="secondary" onclick="promptRenameDevice()">เปลี่ยนชื่อประเภท</button>
+        <button class="danger" onclick="promptDeleteDevice()">ลบประเภท</button>
+      </div>
+      <div class="formgrid" style="margin-top:12px">
+        <div><label>หัวข้อรายการตรวจ<textarea id="setItem" placeholder="เช่น ตรวจสอบสายไฟ AC และปลั๊กไฟ"></textarea></label></div>
+        <div><label>วิธีปฏิบัติ / เกณฑ์ตรวจ<textarea id="setMethod" placeholder="เช่น ตรวจดูรอยชำรุด และทดสอบการทำงาน"></textarea></label></div>
+      </div>
+      <div class="actions"><button class="primary" onclick="addSettingChecklist()">+ เพิ่มรายการตรวจ</button></div>
+      <div id="settingsChecklistList" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card full">
+      <h2>สำรองและย้ายการตั้งค่า</h2>
+      <div class="small">ส่งออกการตั้งค่าทั้งหมดเป็นไฟล์ JSON เพื่อเก็บสำรองหรือนำไปใช้กับ Browser เครื่องอื่น</div>
+      <div class="actions">
+        <button class="secondary" onclick="exportAllSettings()">ส่งออกการตั้งค่าทั้งหมด</button>
+        <label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:9px;cursor:pointer">
+          นำเข้าการตั้งค่าทั้งหมด
+          <input type="file" accept=".json" onchange="importAllSettings(this)" style="display:none">
+        </label>
+        <button class="danger" onclick="resetAllSettings()">คืนค่าเริ่มต้น</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+const defaultLists={
+"EKG":[
+"หน้าปัดและจอแสดงผล","สวิทช์เปิด-ปิดเครื่อง","สวิทช์เลือก Mode / Key Board","ปริ๊กไฟ AC / สายไฟ AC",
+"EKG Electrode / Patient Cable / Paddle Electrode","เปิดเครื่องทดสอบประสิทธิภาพ","ทดสอบแบตเตอรี่","หน้าจอแสดงผล",
+"การทำงานของปุ่มปรับต่าง ๆ","การตรวจสอบภายในระบบ","ทดสอบการวัด/พิมพ์ตามขั้นตอน","การทำงานของเครื่องพิมพ์"
+],
+"Defibrillator":[
+"หน้าจอและระบบแสดงผล","สวิทช์เปิด-ปิดเครื่อง","สวิทช์เลือก Mode / Key Board",
+"ปลั๊กไฟ AC / สายไฟ AC","EKG Electrode / Patient Cable","Paddle Electrode","เปิดเครื่องทดสอบประสิทธิภาพ",
+"ทดสอบแบตเตอรี่","หน้าจอแสดงผล","การตรวจสอบภายในระบบ","ทดสอบการชาร์จ/การทำงานตามขั้นตอน","การทำงานของเครื่องพิมพ์"
+],
+"Infusion Pump":[
+"หน้าจอและระบบแสดงผล","สวิทช์เปิด-ปิดเครื่อง","สวิทช์เลือก Mode / Key Board",
+"ปลั๊กไฟ AC / สายไฟ AC","Drop sensor","Door","ทดสอบปุ่ม/การควบคุม","ทดสอบแบตเตอรี่",
+"การทำงานของระบบ","การทำงานของ Drop sensor","การทำงาน Alarm"
+]};
+const savedChecklist = JSON.parse(localStorage.getItem("medicalChecklistConfig") || "null");
+const lists = savedChecklist && typeof savedChecklist === "object" ? savedChecklist : JSON.parse(JSON.stringify(defaultLists));
+
+function $(id){return document.getElementById(id)}
+function showPage(id,btn){
+  document.querySelectorAll("main>section").forEach(s=>s.classList.add("hidden"));
+  $(id).classList.remove("hidden");
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(id==="history") renderHistory();
+  if(id==="dashboard") updateStats();
+  if(id==="settings") { loadSettingsUI(); renderSettingsChecklist(); }
+}
+function goCheck(device){showPage("check",document.querySelectorAll(".tab")[1]);if(lists[device])$("device").value=device;loadChecklist();}
+function loadChecklist(){
+  const d=$("device").value; $("devicePill").textContent=d;
+  const rows=lists[d];
+  $("count").textContent=`${rows.length} รายการ`;
+  $("checklist").innerHTML=rows.map((x,i)=>`<tr><td>${i+1}</td><td>${x}</td>
+  <td class="c"><label class="radio"><input type="radio" name="q${i}" value="${esc(resultSettings.normal)}" onchange="updateResult()">✓</label></td>
+  <td class="c"><label class="radio"><input type="radio" name="q${i}" value="${esc(resultSettings.abnormal)}" onchange="updateResult()">✕</label></td>
+  <td class="c"><label class="radio"><input type="radio" name="q${i}" value="${esc(resultSettings.na)}" onchange="updateResult()">—</label></td></tr>`).join("");
+  updateResult();
+}
+function updateResult(){
+  const rows=lists[$("device").value];let n=0,bad=false;
+  rows.forEach((_,i)=>{const v=document.querySelector(`input[name=q${i}]:checked`);if(v){n++;if(v.value==="ผิดปกติ")bad=true;}});
+  $("result").className="result "+(n<rows.length?"wait":bad?"bad":"ready");
+  $("result").textContent=n<rows.length?`กรุณาตรวจให้ครบทุกข้อ (${n}/${rows.length})`:bad?"🔴 ไม่พร้อมใช้งาน":"🟢 พร้อมใช้งาน";
+}
+function saveRecord(){
+  const {device,asset,model,serial,dept,inspector,date,time}=Object.fromEntries(["device","asset","model","serial","dept","inspector","date","time"].map(k=>[k,$(k).value.trim()]));
+  if(!asset||!inspector){alert("กรุณาระบุรหัสครุภัณฑ์และผู้ตรวจ");return;}
+  const current=[];let incomplete=false,bad=false;
+  lists[device].forEach((_,i)=>{const v=document.querySelector(`input[name=q${i}]:checked`);if(!v)incomplete=true;current.push(v?v.value:"");if(v&&v.value===resultSettings.abnormal)bad=true;});
+  if(incomplete){alert("กรุณาตรวจให้ครบทุกข้อก่อนบันทึก");return;}
+  const record={id:Date.now(),device,asset,model,serial,dept,inspector,date,time,status:bad?resultSettings.notReady:resultSettings.ready,answers:current,problem:$("problem").value.trim(),action:$("action").value.trim()};
+  const h=JSON.parse(localStorage.getItem("medicalChecks")||"[]");h.unshift(record);localStorage.setItem("medicalChecks",JSON.stringify(h));
+  alert("บันทึกผลการตรวจเรียบร้อยแล้ว");updateStats();renderHistory();
+}
+function resetForm(){
+  if(!confirm("ล้างข้อมูลที่กำลังกรอก?"))return;
+  ["asset","model","serial","dept","inspector","problem","action"].forEach(id=>$(id).value="");
+  document.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false);setNow();updateResult();
+}
+function setNow(){
+  const d=new Date();const local=new Date(d-d.getTimezoneOffset()*60000).toISOString();
+  $("date").value=local.slice(0,10);$("time").value=d.toTimeString().slice(0,5);
+}
+function renderHistory(){
+  const h=JSON.parse(localStorage.getItem("medicalChecks")||"[]");
+  $("history").innerHTML=h.length?h.map(r=>`<tr><td>${r.date||"-"} ${r.time||""}</td><td>${esc(r.device)}</td><td>${esc(r.asset)}</td><td>${esc(r.dept)}</td><td>${esc(r.inspector)}</td><td>${r.status===resultSettings.ready?'<span class="badge bready">${esc(resultSettings.ready)}</span>':'<span class="badge bbad">${esc(resultSettings.notReady)}</span>'}</td></tr>`).join(""):'<tr><td colspan="6" class="small">ยังไม่มีข้อมูล</td></tr>';
+}
+function updateStats(){
+  const h=JSON.parse(localStorage.getItem("medicalChecks")||"[]");
+  $("sReady").textContent=h.filter(x=>x.status==="พร้อมใช้งาน").length;
+  $("sBad").textContent=h.filter(x=>x.status==="ไม่พร้อมใช้งาน").length;
+  const today=$("date").value||new Date().toISOString().slice(0,10);$("sToday").textContent=h.filter(x=>x.date===today).length;
+}
+function clearHistory(){if(confirm("ลบประวัติทั้งหมดในเครื่องนี้?")){localStorage.removeItem("medicalChecks");renderHistory();updateStats();}}
+function exportCSV(){
+  const h=JSON.parse(localStorage.getItem("medicalChecks")||"[]");if(!h.length){alert("ยังไม่มีข้อมูล");return}
+  const headers=["วันที่","เวลา","อุปกรณ์","ครุภัณฑ์","รุ่น","Serial","หน่วยงาน","ผู้ตรวจ","สถานะ","ปัญหา","การดำเนินการ"];
+  const rows=h.map(r=>[r.date,r.time,r.device,r.asset,r.model,r.serial,r.dept,r.inspector,r.status,r.problem,r.action]);
+  const csv=[headers,...rows].map(row=>row.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="medical_device_check_history.csv";a.click();
+}
+function buildMatrix(){
+  const device=$("mDevice").value, rows=lists[device], days=31;
+  $("matrix").innerHTML=`<thead><tr><th>รายการตรวจ</th>${Array.from({length:days},(_,i)=>`<th>${i+1}</th>`).join("")}</tr></thead><tbody>
+  ${rows.map((x,i)=>`<tr><td>${i+1}. ${x}</td>${Array.from({length:days},(_,d)=>`<td><input type="checkbox" data-m="${i}-${d}"></td>`).join("")}</tr>`).join("")}</tbody>`;
+}
+function saveMatrix(){
+  const key="medicalMonthly";const data=JSON.parse(localStorage.getItem(key)||"[]");
+  data.unshift({id:Date.now(),device:$("mDevice").value,month:$("mMonth").value,dept:$("mDept").value,owner:$("mOwner").value,savedAt:new Date().toISOString()});
+  localStorage.setItem(key,JSON.stringify(data));alert("บันทึกตารางรายเดือนแล้ว");
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+
+
+function saveConfig(){localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));}
+function populateDeviceSelects(){
+  const names=Object.keys(lists);
+  const c=$("device").value,m=$("mDevice").value,a=$("adminDevice").value;
+  ["device","mDevice","adminDevice"].forEach(id=>$(id).innerHTML=names.map(d=>`<option>${esc(d)}</option>`).join(""));
+  if(names.includes(c))$("device").value=c;
+  if(names.includes(m))$("mDevice").value=m;
+  if(names.includes(a))$("adminDevice").value=a;
+}
+function renderAdminDevices(){
+  $("deviceAdminList").innerHTML=Object.keys(lists).map((d,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e5e7eb">
+      <b>${i+1}. ${esc(d)}</b>
+      <div class="actions" style="margin:0">
+        <button class="secondary" onclick="renameDevice('${encodeURIComponent(d)}')">เปลี่ยนชื่อ</button>
+        <button class="danger" onclick="deleteDevice('${encodeURIComponent(d)}')">ลบ</button>
+      </div>
+    </div>`).join("");
+}
+function renderAdminChecklist(){
+  const d=$("adminDevice").value, rows=lists[d]||[];
+  $("adminChecklistList").innerHTML=rows.length?rows.map((x,i)=>`
+    <div style="border:1px solid #e5e7eb;border-radius:10px;padding:11px;margin:8px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+        <div style="flex:1"><b>${i+1}. ${esc(x)}</b></div>
+        <div class="actions" style="margin:0">
+          <button class="secondary" onclick="editChecklistItem(${i})">แก้ไข</button>
+          <button class="secondary" onclick="moveChecklist(${i},-1)">↑</button>
+          <button class="secondary" onclick="moveChecklist(${i},1)">↓</button>
+          <button class="danger" onclick="deleteChecklistItem(${i})">ลบ</button>
+        </div>
+      </div>
+    </div>`).join(""):'<div class="small">ยังไม่มีหัวข้อ Checklist</div>';
+}
+function addDevice(){
+  const name=$("newDeviceName").value.trim();
+  if(!name){alert("กรุณาระบุชื่อประเภทอุปกรณ์");return}
+  if(lists[name]){alert("มีประเภทนี้อยู่แล้ว");return}
+  lists[name]=[];saveConfig();$("newDeviceName").value="";populateDeviceSelects();renderAdminDevices();renderAdminChecklist();
+}
+function renameDevice(encoded){
+  const old=decodeURIComponent(encoded), n=prompt("ชื่อใหม่",old);
+  if(!n||n.trim()===old)return;const name=n.trim();
+  if(lists[name]){alert("มีชื่อประเภทนี้อยู่แล้ว");return}
+  lists[name]=lists[old];delete lists[old];saveConfig();populateDeviceSelects();renderAdminDevices();renderAdminChecklist();loadChecklist();buildMatrix();
+}
+function deleteDevice(encoded){
+  const d=decodeURIComponent(encoded);
+  if(Object.keys(lists).length<=1){alert("ต้องเหลืออย่างน้อย 1 ประเภทอุปกรณ์");return}
+  if(confirm("ลบ "+d+" และ Checklist ของประเภทนี้หรือไม่?")){delete lists[d];saveConfig();populateDeviceSelects();renderAdminDevices();renderAdminChecklist();loadChecklist();buildMatrix();}
+}
+function addChecklistItem(){
+  const d=$("adminDevice").value,item=$("newChecklist").value.trim(),method=$("newMethod").value.trim();
+  if(!item){alert("กรุณาระบุหัวข้อ Checklist");return}
+  lists[d].push(method?item+" — "+method:item);saveConfig();$("newChecklist").value="";$("newMethod").value="";renderAdminChecklist();loadChecklist();buildMatrix();
+}
+function editChecklistItem(i){
+  const d=$("adminDevice").value,val=prompt("แก้ไขหัวข้อ Checklist",lists[d][i]);
+  if(val===null||!val.trim())return;lists[d][i]=val.trim();saveConfig();renderAdminChecklist();loadChecklist();buildMatrix();
+}
+function deleteChecklistItem(i){
+  const d=$("adminDevice").value;if(confirm("ลบหัวข้อนี้หรือไม่?")){lists[d].splice(i,1);saveConfig();renderAdminChecklist();loadChecklist();buildMatrix();}
+}
+function moveChecklist(i,dir){
+  const d=$("adminDevice").value,j=i+dir;if(j<0||j>=lists[d].length)return;
+  [lists[d][i],lists[d][j]]=[lists[d][j],lists[d][i]];saveConfig();renderAdminChecklist();loadChecklist();buildMatrix();
+}
+function exportConfig(){
+  const blob=new Blob([JSON.stringify(lists,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="medical_checklist_config.json";a.click();
+}
+function importConfigFile(input){
+  const f=input.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{
+    const data=JSON.parse(r.result);if(!data||Array.isArray(data)||typeof data!=="object")throw 0;
+    for(const v of Object.values(data))if(!Array.isArray(v))throw 0;
+    Object.keys(lists).forEach(k=>delete lists[k]);Object.assign(lists,data);saveConfig();populateDeviceSelects();renderAdminDevices();renderAdminChecklist();loadChecklist();buildMatrix();alert("นำเข้าการตั้งค่าเรียบร้อยแล้ว");
+  }catch(e){alert("ไฟล์การตั้งค่าไม่ถูกต้อง")} input.value="";};r.readAsText(f);
+}
+function resetConfig(){
+  if(!confirm("คืนค่า Checklist เริ่มต้นหรือไม่? ประวัติการตรวจจะไม่ถูกลบ"))return;
+  Object.keys(lists).forEach(k=>delete lists[k]);Object.assign(lists,JSON.parse(JSON.stringify(defaultLists)));saveConfig();populateDeviceSelects();renderAdminDevices();renderAdminChecklist();loadChecklist();buildMatrix();
+}
+
+
+const DEFAULT_SITE_SETTINGS = {
+  hospital:"WANGNUEA HOSPITAL",
+  title:"ระบบตรวจเช็กความพร้อมใช้งานอุปกรณ์ทางการแพทย์ออนไลน์",
+  subtitle:"เลือกอุปกรณ์ → กรอกข้อมูล → ตรวจเช็ก → ระบบสรุปสถานะ → บันทึกประวัติ",
+  footer:"หมายเหตุ: ระบบนี้เป็นต้นแบบสำหรับการตรวจความพร้อมใช้งาน ไม่ใช่ระบบสอบเทียบหรือทดสอบสมรรถนะทางวิศวกรรมของเครื่องมือแพทย์"
+};
+const DEFAULT_FIELD_SETTINGS = {
+  asset:true, model:true, serial:true, dept:true, inspector:true, date:true, time:true, problem:true, action:true
+};
+const DEFAULT_RESULT_SETTINGS = {
+  normal:"ปกติ", abnormal:"ผิดปกติ", na:"N/A", ready:"พร้อมใช้งาน", notReady:"ไม่พร้อมใช้งาน"
+};
+function loadCfg(key, fallback){
+  try { const x=JSON.parse(localStorage.getItem(key)||"null"); return x && typeof x==="object" ? x : JSON.parse(JSON.stringify(fallback)); }
+  catch(e){ return JSON.parse(JSON.stringify(fallback)); }
+}
+let siteSettings = loadCfg("medicalSiteSettings", DEFAULT_SITE_SETTINGS);
+let fieldSettings = loadCfg("medicalFieldSettings", DEFAULT_FIELD_SETTINGS);
+let resultSettings = loadCfg("medicalResultSettings", DEFAULT_RESULT_SETTINGS);
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+function applySiteSettings(){
+  $("siteHospital").textContent=siteSettings.hospital;
+  $("siteTitle").textContent=siteSettings.title;
+  $("siteFooter").textContent=siteSettings.footer;
+  document.title=siteSettings.hospital+" | "+siteSettings.title;
+}
+function loadSettingsUI(){
+  $("cfgHospital").value=siteSettings.hospital;
+  $("cfgSystemTitle").value=siteSettings.title;
+  $("cfgSystemSubtitle").value=siteSettings.subtitle;
+  $("cfgFooter").value=siteSettings.footer;
+  $("cfgNormal").value=resultSettings.normal;
+  $("cfgAbnormal").value=resultSettings.abnormal;
+  $("cfgNA").value=resultSettings.na;
+  $("cfgReady").value=resultSettings.ready;
+  $("cfgNotReady").value=resultSettings.notReady;
+  const labels={
+    asset:"หมายเลขครุภัณฑ์",model:"ยี่ห้อ / รุ่น",serial:"Serial Number",dept:"หน่วยงาน / ห้อง",
+    inspector:"ผู้ตรวจ",date:"วันที่",time:"เวลา",problem:"อาการ / ปัญหาที่พบ",action:"การดำเนินการ"
+  };
+  $("fieldSettings").innerHTML=Object.entries(labels).map(([k,v])=>`
+    <label style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #e5e7eb">
+      <input type="checkbox" id="field_${k}" ${fieldSettings[k]!==false?"checked":""} style="width:auto"> ${v}
+    </label>`).join("");
+  populateSettingsDevice();
+}
+function saveSiteSettings(){
+  siteSettings={hospital:$("cfgHospital").value.trim()||DEFAULT_SITE_SETTINGS.hospital,title:$("cfgSystemTitle").value.trim()||DEFAULT_SITE_SETTINGS.title,subtitle:$("cfgSystemSubtitle").value.trim(),footer:$("cfgFooter").value.trim()};
+  localStorage.setItem("medicalSiteSettings",JSON.stringify(siteSettings));applySiteSettings();alert("บันทึกข้อมูลหน้าเว็บแล้ว");
+}
+function saveFieldSettings(){
+  Object.keys(DEFAULT_FIELD_SETTINGS).forEach(k=>fieldSettings[k]=$("field_"+k).checked);
+  localStorage.setItem("medicalFieldSettings",JSON.stringify(fieldSettings));
+  updateFieldVisibility(); alert("บันทึกข้อมูลช่องกรอกแล้ว");
+}
+function updateFieldVisibility(){
+  Object.entries({
+    asset:"asset",model:"model",serial:"serial",dept:"dept",inspector:"inspector",date:"date",time:"time",problem:"problem",action:"action"
+  }).forEach(([k,id])=>{
+    const el=$(id); if(!el)return;
+    const block=el.closest("label")?.parentElement || el.closest("label");
+    if(block) block.style.display=fieldSettings[k]===false?"none":"";
+  });
+}
+function saveResultSettings(){
+  resultSettings={
+    normal:$("cfgNormal").value.trim()||"ปกติ",
+    abnormal:$("cfgAbnormal").value.trim()||"ผิดปกติ",
+    na:$("cfgNA").value.trim()||"N/A",
+    ready:$("cfgReady").value.trim()||"พร้อมใช้งาน",
+    notReady:$("cfgNotReady").value.trim()||"ไม่พร้อมใช้งาน"
+  };
+  localStorage.setItem("medicalResultSettings",JSON.stringify(resultSettings));
+  loadChecklist(); alert("บันทึกตัวเลือกผลการตรวจแล้ว");
+}
+function populateSettingsDevice(){
+  const names=Object.keys(lists), cur=$("settingsDevice").value;
+  $("settingsDevice").innerHTML=names.map(d=>`<option>${esc(d)}</option>`).join("");
+  if(names.includes(cur))$("settingsDevice").value=cur;
+  $("adminDevice").innerHTML=names.map(d=>`<option>${esc(d)}</option>`).join("");
+}
+function renderSettingsChecklist(){
+  const d=$("settingsDevice").value, rows=lists[d]||[];
+  $("settingsChecklistList").innerHTML=rows.length?rows.map((x,i)=>`
+    <div style="border:1px solid #e5e7eb;border-radius:10px;padding:11px;margin:8px 0">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+        <div><b>${i+1}.</b> ${esc(x)}</div>
+        <div class="actions" style="margin:0">
+          <button class="secondary" onclick="editSettingChecklist(${i})">แก้ไข</button>
+          <button class="secondary" onclick="moveSettingChecklist(${i},-1)">↑</button>
+          <button class="secondary" onclick="moveSettingChecklist(${i},1)">↓</button>
+          <button class="danger" onclick="deleteSettingChecklist(${i})">ลบ</button>
+        </div>
+      </div>
+    </div>`).join(""):'<div class="small">ยังไม่มีรายการตรวจ</div>';
+}
+function addSettingChecklist(){
+  const d=$("settingsDevice").value,item=$("setItem").value.trim(),method=$("setMethod").value.trim();
+  if(!item){alert("กรุณาระบุหัวข้อรายการตรวจ");return}
+  lists[d].push(method?item+" — "+method:item);localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));
+  $("setItem").value="";$("setMethod").value="";renderSettingsChecklist();loadChecklist();buildMatrix();
+}
+function editSettingChecklist(i){
+  const d=$("settingsDevice").value,v=prompt("แก้ไขหัวข้อ / วิธีตรวจ",lists[d][i]);
+  if(v===null||!v.trim())return;lists[d][i]=v.trim();localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));renderSettingsChecklist();loadChecklist();buildMatrix();
+}
+function deleteSettingChecklist(i){
+  const d=$("settingsDevice").value;if(confirm("ต้องการลบรายการนี้หรือไม่?")){lists[d].splice(i,1);localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));renderSettingsChecklist();loadChecklist();buildMatrix();}
+}
+function moveSettingChecklist(i,dir){
+  const d=$("settingsDevice").value,j=i+dir;if(j<0||j>=lists[d].length)return;
+  [lists[d][i],lists[d][j]]=[lists[d][j],lists[d][i]];localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));renderSettingsChecklist();loadChecklist();buildMatrix();
+}
+function promptAddDevice(){
+  const n=prompt("ชื่อประเภทอุปกรณ์ใหม่");
+  if(!n||!n.trim())return;const name=n.trim();if(lists[name]){alert("มีประเภทนี้แล้ว");return}
+  lists[name]=[];localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));populateDeviceSelects();populateSettingsDevice();$("settingsDevice").value=name;renderSettingsChecklist();loadChecklist();buildMatrix();
+}
+function promptRenameDevice(){
+  const old=$("settingsDevice").value,n=prompt("ชื่อใหม่",old);if(!n||!n.trim()||n.trim()===old)return;
+  const name=n.trim();if(lists[name]){alert("มีชื่อประเภทนี้แล้ว");return}
+  lists[name]=lists[old];delete lists[old];localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));populateDeviceSelects();populateSettingsDevice();$("settingsDevice").value=name;renderSettingsChecklist();loadChecklist();buildMatrix();
+}
+function promptDeleteDevice(){
+  const d=$("settingsDevice").value;if(Object.keys(lists).length<=1){alert("ต้องเหลืออย่างน้อย 1 ประเภท");return}
+  if(confirm("ลบประเภท "+d+" และ Checklist ทั้งหมดหรือไม่?")){delete lists[d];localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));populateDeviceSelects();populateSettingsDevice();renderSettingsChecklist();loadChecklist();buildMatrix();}
+}
+function exportAllSettings(){
+  const data={siteSettings,fieldSettings,resultSettings,checklists:lists};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="WangNuea_Medical_Check_Settings.json";a.click();
+}
+function importAllSettings(input){
+  const f=input.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d.siteSettings||!d.fieldSettings||!d.resultSettings||!d.checklists)throw 0;
+      siteSettings=d.siteSettings;fieldSettings=d.fieldSettings;resultSettings=d.resultSettings;
+      Object.keys(lists).forEach(k=>delete lists[k]);Object.assign(lists,d.checklists);
+      localStorage.setItem("medicalSiteSettings",JSON.stringify(siteSettings));
+      localStorage.setItem("medicalFieldSettings",JSON.stringify(fieldSettings));
+      localStorage.setItem("medicalResultSettings",JSON.stringify(resultSettings));
+      localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));
+      applySiteSettings();populateDeviceSelects();loadSettingsUI();renderSettingsChecklist();loadChecklist();buildMatrix();updateFieldVisibility();
+      alert("นำเข้าการตั้งค่าทั้งหมดเรียบร้อยแล้ว");
+    }catch(e){alert("ไฟล์การตั้งค่าไม่ถูกต้อง")}
+    input.value="";
+  };r.readAsText(f);
+}
+function resetAllSettings(){
+  if(!confirm("คืนค่าเริ่มต้นของเว็บและ Checklist หรือไม่? ประวัติการตรวจจะไม่ถูกลบ"))return;
+  siteSettings=JSON.parse(JSON.stringify(DEFAULT_SITE_SETTINGS));
+  fieldSettings=JSON.parse(JSON.stringify(DEFAULT_FIELD_SETTINGS));
+  resultSettings=JSON.parse(JSON.stringify(DEFAULT_RESULT_SETTINGS));
+  Object.keys(lists).forEach(k=>delete lists[k]);Object.assign(lists,JSON.parse(JSON.stringify(defaultLists)));
+  localStorage.setItem("medicalSiteSettings",JSON.stringify(siteSettings));
+  localStorage.setItem("medicalFieldSettings",JSON.stringify(fieldSettings));
+  localStorage.setItem("medicalResultSettings",JSON.stringify(resultSettings));
+  localStorage.setItem("medicalChecklistConfig",JSON.stringify(lists));
+  applySiteSettings();populateDeviceSelects();loadSettingsUI();renderSettingsChecklist();loadChecklist();buildMatrix();updateFieldVisibility();
+}
+
+applySiteSettings();populateDeviceSelects();loadChecklist();updateFieldVisibility();setNow();loadSettingsUI();renderSettingsChecklist();$("mMonth").value=new Date().toISOString().slice(0,7);buildMatrix();updateStats();renderAdminDevices();renderAdminChecklist();
+</script>
+</body>
+</html>
